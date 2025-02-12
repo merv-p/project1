@@ -74,8 +74,7 @@ prophet==1.1.6
 tensorflow-cpu==2.16.1
 networkx
 scikit-learn
-- pillow==9.5.0
-+ pillow>=9.5.0
-
 statsmodels==0.14.0
 openpyxl
+- pillow==9.5.0
++ pillow>=9.5.0
