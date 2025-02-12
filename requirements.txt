@@ -76,5 +76,4 @@ networkx
 scikit-learn
 statsmodels==0.14.0
 openpyxl
-- pillow==9.5.0
-+ pillow>=9.5.0
+pillow>=9.5.0
