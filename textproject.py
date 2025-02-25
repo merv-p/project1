@@ -61,14 +61,19 @@ if uploaded_file is not None:
         text_column = st.selectbox("Select the column containing text", df.columns)
         
         # Let the user choose a threshold for topic detection.
-        threshold = st.slider("Score Threshold for Topic Detection", min_value=0.0, max_value=1.0, value=0.3, step=0.05)
+        threshold = st.slider(
+            "Score Threshold for Topic Detection", 
+            min_value=0.0, max_value=1.0, value=0.3, step=0.05
+        )
         
         if st.button("Analyze Comments"):
             with st.spinner("Analyzing..."):
                 # Use the TensorFlow backend to avoid torch-related errors.
-                classifier = pipeline("zero-shot-classification", 
-                                      model="facebook/bart-large-mnli", 
-                                      framework="tf")
+                classifier = pipeline(
+                    "zero-shot-classification", 
+                    model="facebook/bart-large-mnli", 
+                    framework="tf"
+                )
                 analyzer = SentimentIntensityAnalyzer()
                 
                 topics_detected = []
@@ -77,7 +82,6 @@ if uploaded_file is not None:
                 # Process each row in the selected text column.
                 for text in df[text_column]:
                     if isinstance(text, str) and text.strip():
-                        # Use zero-shot classification (multi_label enabled) to score candidate topics.
                         result = classifier(text, candidate_list, multi_label=True)
                         selected_topics = [
                             label for label, score in zip(result["labels"], result["scores"]) 
@@ -85,7 +89,6 @@ if uploaded_file is not None:
                         ]
                         topics_detected.append(", ".join(selected_topics))
                         
-                        # Perform sentiment analysis using VADER.
                         vs = analyzer.polarity_scores(text)
                         compound = vs["compound"]
                         if compound >= 0.05:
@@ -96,6 +99,24 @@ if uploaded_file is not None:
                             sentiment = "Neutral"
                         sentiments.append(sentiment)
                     else:
-                        topics
+                        topics_detected.append("")
+                        sentiments.append("")
+                
+                df["Detected Topics"] = topics_detected
+                df["Sentiment"] = sentiments
+                
+                st.subheader("Analysis Results")
+                st.dataframe(df)
+                
+                csv = df.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    "Download Results as CSV", 
+                    data=csv,
+                    file_name="ai_topic_sentiment_results.csv", 
+                    mime="text/csv"
+                )
+    except Exception as e:
+        st.error(f"Error processing file: {e}")
+
 
 
