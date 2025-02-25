@@ -1,22 +1,23 @@
 import streamlit as st
 import pandas as pd
 
-# Import the transformers pipeline
+# Import transformers pipeline
 try:
     from transformers import pipeline
 except Exception as e:
     st.error(
         "Error importing the transformers package. "
-        "Please ensure you have installed a compatible version (e.g., run 'pip install --upgrade transformers tensorflow')."
+        "Please run 'pip install --upgrade transformers tensorflow'."
     )
     raise e
 
-# Revised import for VADER: use the all-lowercase package name.
+# Import VADER for sentiment analysis (ensure correct spelling)
 try:
-    from vadersentiment.vadersentiment import SentimentIntensityAnalyzer
-except Exception as e:
+    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+except ImportError as e:
     st.error(
-        "Error importing vadersentiment. Please install it using 'pip install vadersentiment'."
+        "Module not found: vaderSentiment. Please install it using:\n\n"
+        "pip install vaderSentiment"
     )
     raise e
 
