@@ -1,6 +1,15 @@
+
+```python
 import streamlit as st
 import pandas as pd
-from transformers import pipeline
+
+# Wrap the import of transformers.pipeline in a try/except to catch installation issues
+try:
+    from transformers import pipeline
+except ImportError as e:
+    st.error("Error importing the transformers package. Please install it via 'pip install transformers'.")
+    raise e
+
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 st.title("AI Text Analytics: Multi-Topic Categorization & Sentiment Detection")
@@ -17,6 +26,7 @@ if candidate_topics_file is not None:
     try:
         filename = candidate_topics_file.name.lower()
         if filename.endswith('.txt'):
+            # One topic per line
             content = candidate_topics_file.getvalue().decode("utf-8")
             candidate_list = [line.strip() for line in content.splitlines() if line.strip()]
         elif filename.endswith('.csv'):
@@ -30,10 +40,8 @@ if candidate_topics_file is not None:
 
 # If no candidate topics file is provided, allow manual input.
 if not candidate_list:
-    candidate_topics_input = st.text_area(
-        "Or enter a comma-separated list of topics (required)",
-        "Finance, Health, Technology, Sports, Entertainment"
-    )
+    candidate_topics_input = st.text_area("Or enter a comma-separated list of topics (required)", 
+                                          "Finance, Health, Technology, Sports, Entertainment")
     candidate_list = [topic.strip() for topic in candidate_topics_input.split(",") if topic.strip()]
 
 if not candidate_list:
@@ -53,14 +61,16 @@ if uploaded_file is not None:
         # Let the user choose the text column to analyze
         text_column = st.selectbox("Select the column containing text", df.columns)
 
-        # Let the user set a confidence threshold for topic detection
-        threshold = st.slider("Score Threshold for Topic Detection", min_value=0.0, max_value=1.0, value=0.3, step=0.05)
+        # Allow setting a threshold for topic detection confidence
+        threshold = st.slider("Score Threshold for Topic Detection", min_value=0.0, max_value=1.0, 
+                              value=0.3, step=0.05)
 
         if st.button("Analyze Comments"):
             with st.spinner("Analyzing..."):
-                # Initialize the zero-shot classification pipeline with multi-label support
-                classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
-                # Initialize VADER for sentiment analysis
+                # Use TensorFlow backend to avoid torch-related errors
+                classifier = pipeline("zero-shot-classification", 
+                                      model="facebook/bart-large-mnli", 
+                                      framework="tf")
                 analyzer = SentimentIntensityAnalyzer()
 
                 topics_detected = []
@@ -69,11 +79,10 @@ if uploaded_file is not None:
                 # Process each row in the selected text column
                 for text in df[text_column]:
                     if isinstance(text, str) and text.strip():
-                        # Use zero-shot classification with multi_label=True
+                        # Use zero-shot classification with multi_label=True against candidate topics
                         result = classifier(text, candidate_list, multi_label=True)
-                        # Pick all candidate topics with a score above the threshold
                         selected_topics = [
-                            label for label, score in zip(result["labels"], result["scores"])
+                            label for label, score in zip(result["labels"], result["scores"]) 
                             if score >= threshold
                         ]
                         topics_detected.append(", ".join(selected_topics))
@@ -99,13 +108,9 @@ if uploaded_file is not None:
                 st.subheader("Analysis Results")
                 st.dataframe(df)
 
-                # Provide an option to download the results
                 csv = df.to_csv(index=False).encode("utf-8")
-                st.download_button(
-                    "Download Results as CSV",
-                    data=csv,
-                    file_name="ai_topic_sentiment_results.csv",
-                    mime="text/csv"
-                )
+                st.download_button("Download Results as CSV", data=csv,
+                                   file_name="ai_topic_sentiment_results.csv", mime="text/csv")
     except Exception as e:
         st.error(f"Error processing file: {e}")
+
