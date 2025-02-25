@@ -79,5 +79,5 @@ openpyxl
 pillow>=9.5.0
 transformers==4.49.0
 vaderSentiment==3.3.2
-tf-keras==2.19.0orc0
+tf-keras==2.18
 
