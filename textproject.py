@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-# Import transformers pipeline
+# Import the transformers pipeline
 try:
     from transformers import pipeline
 except Exception as e:
@@ -11,13 +11,12 @@ except Exception as e:
     )
     raise e
 
-# Import VADER for sentiment analysis (ensure correct spelling)
+# Import VADER for sentiment analysis
 try:
     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 except ImportError as e:
     st.error(
-        "Module not found: vaderSentiment. Please install it using:\n\n"
-        "pip install vaderSentiment"
+        "Module not found: vaderSentiment. Please install it using 'pip install vaderSentiment'."
     )
     raise e
 
@@ -79,12 +78,22 @@ if uploaded_file is not None:
         
         if st.button("Analyze Comments"):
             with st.spinner("Analyzing..."):
-                # Use the TensorFlow backend to avoid torch-related issues.
-                classifier = pipeline(
-                    "zero-shot-classification", 
-                    model="facebook/bart-large-mnli", 
-                    framework="tf"
-                )
+                # Try creating the zero-shot classifier using TensorFlow backend.
+                try:
+                    classifier = pipeline(
+                        "zero-shot-classification", 
+                        model="facebook/bart-large-mnli", 
+                        framework="tf"
+                    )
+                except Exception as e:
+                    st.error(
+                        "Failed to initialize the zero-shot classification pipeline.\n"
+                        "This is likely due to the incompatibility of Keras 3 with Transformers.\n"
+                        "Please uninstall Keras 3 and install the backwards-compatible tf-keras package using:\n\n"
+                        "pip uninstall keras && pip install tf-keras"
+                    )
+                    raise e
+                
                 analyzer = SentimentIntensityAnalyzer()
                 
                 topics_detected = []
