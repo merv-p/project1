@@ -1,14 +1,24 @@
 import streamlit as st
 import pandas as pd
 
-# Attempt to import transformers.pipeline; if missing, show an error.
+# Import the transformers pipeline
 try:
     from transformers import pipeline
-except ImportError as e:
-    st.error("The transformers package is not installed. Please run 'pip install transformers'.")
+except Exception as e:
+    st.error(
+        "Error importing the transformers package. "
+        "Please ensure you have installed a compatible version (e.g., run 'pip install --upgrade transformers tensorflow')."
+    )
     raise e
 
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+# Revised import for VADER: use the all-lowercase package name.
+try:
+    from vadersentiment.vadersentiment import SentimentIntensityAnalyzer
+except Exception as e:
+    st.error(
+        "Error importing vadersentiment. Please install it using 'pip install vadersentiment'."
+    )
+    raise e
 
 st.title("AI Text Analytics: Multi-Topic Categorization & Sentiment Detection")
 
@@ -68,7 +78,7 @@ if uploaded_file is not None:
         
         if st.button("Analyze Comments"):
             with st.spinner("Analyzing..."):
-                # Use the TensorFlow backend to avoid torch-related errors.
+                # Use the TensorFlow backend to avoid torch-related issues.
                 classifier = pipeline(
                     "zero-shot-classification", 
                     model="facebook/bart-large-mnli", 
@@ -117,6 +127,3 @@ if uploaded_file is not None:
                 )
     except Exception as e:
         st.error(f"Error processing file: {e}")
-
-
-
